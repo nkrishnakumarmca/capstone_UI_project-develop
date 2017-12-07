@@ -28,6 +28,38 @@ var initial_drop_id = "";
 // A $(document).ready() block.
 $(document).ready(function () {
 
+    $.validator.addMethod("validateName", function (value, element, options) {
+        var inputData = getInputData();
+        return !editId ?
+            (!data_object.find(o => (o.name === inputData.name.trim() && o.category === inputData.category.trim() ) )) : 
+            (!data_object.find(o => (o.name === inputData.name.trim() && o.category === inputData.category.trim()  && o._id !== editId )));
+    }, "Product name already exist in this category.");
+
+    /* Form Validation */
+    $('#product-form').validate({
+        rules: {
+            addName: {
+                required: true,
+                validateName: true
+            },
+            addCategory: {
+                required: true
+            },
+            addPrice: {
+                required: true,
+                number: true
+            },
+            addDescription: {
+                required: true
+            }
+        },
+        submitHandler: function (form) {
+            console.log('valid form');
+            return false;
+        }
+    });
+
+
     //Write any code you want executed in a $(document).ready() block here
     $("#upload-image").hide();
 
@@ -97,7 +129,8 @@ $(document).ready(function () {
 
     /* Function when add product button is clicked */
     $(document).on("click", "#save-form", function () {
-        if (validateFormDetails()) {
+        /* Check for validation errors */
+        if ($('#product-form').valid()) {
             createProduct(getInputData());
         }
     });
@@ -171,10 +204,10 @@ function getProducts() {
                 data_object = item;
                 $.each(item, function (key, value) {
                     //Right Code to update in the Product Template
-
+                    var imageUrl = value.productImg ? value.productImg.filePath ? value.productImg.filePath.substr(9) : '' : '';
                     product_template += "<div class='col-lg-12 panel panel-default dashboard_graph' id = 'test-filter'>"
                         + "<div class='col-lg-3'><div>"
-                        + "<img id='image-div-" + value._id + "' src=" + value.productImg.filePath.substr(9) + " class = 'img-thumbnail  float-center'></div>"
+                        + "<img id='image-div-" + value._id + "' src=" + imageUrl + " class = 'img-thumbnail  float-center'></div>"
                         + "<div id='upload'><button class='btn btn-link fa fa-upload' style='padding-left: 45%' id='upload-" + value._id + "'> Upload</button></div></div>"
                         + "<div id='" + value.category + "-" + value._id + "' class='col-lg-8 col-xs-12  pull-right text-justify'>"
                         + "<h4>" + value.name + "</h4>"
@@ -299,11 +332,11 @@ function validateFormDetails() {
 function getInputData() {
 
     return {
-        name: input_name,
-        category: input_category,
-        description: input_description,
-        price: input_price
-    }
+        name: document.getElementById("add-name").value,
+        category: document.getElementById("add-category").value,
+        description: document.getElementById("add-description").value,
+        price: document.getElementById("add-price").value
+    };
 }
 
 /*Remove Product*/
